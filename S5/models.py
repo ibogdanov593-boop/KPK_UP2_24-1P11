@@ -7,10 +7,9 @@ from typing import Optional, List
 db = SqliteDatabase('departments.db')
 
 class Department(Model):
-    """Модель отделения/факультета)"""
+    """Модель отделения/факультета (без NULL-полей)"""
     name = CharField(max_length=100, unique=True, null=False, verbose_name="Название отделения")
     phone = CharField(max_length=20, null=False, default='', verbose_name="Телефон")
-    manager = CharField(max_length=100, null=False, default='', verbose_name="Заведующий")
     building = CharField(max_length=50, null=False, default='', verbose_name="Корпус")
     is_active = BooleanField(null=False, default=True, verbose_name="Активно")
 
@@ -24,18 +23,15 @@ def init_db():
     db.create_tables([Department], safe=True)
     db.close()
 
-# ==================== PYDANTIC СХЕМЫ ====================
 class DepartmentCreate(BaseModel):
     name: str = Field(..., max_length=100, description="Название отделения")
     phone: Optional[str] = Field('', max_length=20, description="Телефон")
-    manager: Optional[str] = Field('', max_length=100, description="Заведующий")
     building: Optional[str] = Field('', max_length=50, description="Корпус")
     is_active: bool = Field(True, description="Активно")
 
 class DepartmentUpdate(BaseModel):
     name: Optional[str] = Field(None, max_length=100, description="Название отделения")
     phone: Optional[str] = Field(None, max_length=20, description="Телефон")
-    manager: Optional[str] = Field(None, max_length=100, description="Заведующий")
     building: Optional[str] = Field(None, max_length=50, description="Корпус")
     is_active: Optional[bool] = Field(None, description="Активно")
 
@@ -43,7 +39,6 @@ class DepartmentOut(BaseModel):
     id: int
     name: str
     phone: str
-    manager: str
     building: str
     is_active: bool
 
@@ -74,7 +69,6 @@ def create_department(dept: DepartmentCreate):
     new_dept = Department.create(
         name=dept.name,
         phone=dept.phone or '',
-        manager=dept.manager or '',
         building=dept.building or '',
         is_active=dept.is_active
     )
@@ -95,7 +89,6 @@ def get_department(dept_id: int):
 @app.get("/departments", response_model=List[DepartmentOut])
 def list_departments(
     name: Optional[str] = None,
-    manager: Optional[str] = None,
     building: Optional[str] = None,
     is_active: Optional[bool] = None,
     limit: int = 100,
@@ -105,8 +98,6 @@ def list_departments(
     query = Department.select()
     if name:
         query = query.where(Department.name.contains(name))
-    if manager:
-        query = query.where(Department.manager.contains(manager))
     if building:
         query = query.where(Department.building.contains(building))
     if is_active is not None:
@@ -123,15 +114,12 @@ def update_department(dept_id: int, dept: DepartmentUpdate):
         raise HTTPException(404, "Отделение не найдено")
     update_data = {}
     if dept.name is not None:
-        # Проверка уникальности нового имени
         if Department.select().where((Department.name == dept.name) & (Department.id != dept_id)).exists():
             db.close()
             raise HTTPException(400, "Отделение с таким названием уже существует")
         update_data['name'] = dept.name
     if dept.phone is not None:
         update_data['phone'] = dept.phone
-    if dept.manager is not None:
-        update_data['manager'] = dept.manager
     if dept.building is not None:
         update_data['building'] = dept.building
     if dept.is_active is not None:
