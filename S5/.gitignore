@@ -3,15 +3,15 @@ venv/
 env/
 .venv/
 
-# Кэш Python
+# Кэш и байт-код Python
 __pycache__/
 *.pyc
 *.pyo
 
-# База данных
+# База данных SQLite
 *.db
 *.sqlite
-groups.db
+departments.db
 
 # Логи
 *.log
