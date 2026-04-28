@@ -76,7 +76,7 @@ def get_department(dept_id: int):
         raise HTTPException(404, "Отделение не найдено")
     finally:
         db.close()
- 
+        
 @app.get("/departments", response_model=List[DepartmentOut])
 def list_departments(name: Optional[str] = None, limit: int = 100):
     db.connect()
