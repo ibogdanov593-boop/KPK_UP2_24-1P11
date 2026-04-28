@@ -10,7 +10,7 @@ class Department(Model):
     """Модель отделения/факультета (без NULL-полей)"""
     name = CharField(max_length=100, unique=True, null=False, verbose_name="Название отделения")
     phone = CharField(max_length=20, null=False, default='', verbose_name="Телефон")
-    building = CharField(max_length=50, null=False, default='', verbose_name="Корпус")
+    campus = CharField(max_length=50, null=False, default='', verbose_name="Корпус")
     is_active = BooleanField(null=False, default=True, verbose_name="Активно")
 
     class Meta:
@@ -26,20 +26,20 @@ def init_db():
 class DepartmentCreate(BaseModel):
     name: str = Field(..., max_length=100, description="Название отделения")
     phone: Optional[str] = Field('', max_length=20, description="Телефон")
-    building: Optional[str] = Field('', max_length=50, description="Корпус")
+    campus: Optional[str] = Field('', max_length=50, description="Корпус")
     is_active: bool = Field(True, description="Активно")
 
 class DepartmentUpdate(BaseModel):
     name: Optional[str] = Field(None, max_length=100, description="Название отделения")
     phone: Optional[str] = Field(None, max_length=20, description="Телефон")
-    building: Optional[str] = Field(None, max_length=50, description="Корпус")
+    campus: Optional[str] = Field(None, max_length=50, description="Корпус")
     is_active: Optional[bool] = Field(None, description="Активно")
 
 class DepartmentOut(BaseModel):
     id: int
     name: str
     phone: str
-    building: str
+    campus: str
     is_active: bool
 
 @asynccontextmanager
@@ -69,7 +69,7 @@ def create_department(dept: DepartmentCreate):
     new_dept = Department.create(
         name=dept.name,
         phone=dept.phone or '',
-        building=dept.building or '',
+        campus=dept.campus or '',
         is_active=dept.is_active
     )
     db.close()
@@ -89,7 +89,7 @@ def get_department(dept_id: int):
 @app.get("/departments", response_model=List[DepartmentOut])
 def list_departments(
     name: Optional[str] = None,
-    building: Optional[str] = None,
+    campus: Optional[str] = None,
     is_active: Optional[bool] = None,
     limit: int = 100,
     offset: int = 0
@@ -98,8 +98,8 @@ def list_departments(
     query = Department.select()
     if name:
         query = query.where(Department.name.contains(name))
-    if building:
-        query = query.where(Department.building.contains(building))
+    if campus:
+        query = query.where(Department.campus.contains(campus))
     if is_active is not None:
         query = query.where(Department.is_active == is_active)
     result = list(query.offset(offset).limit(limit))
@@ -120,8 +120,8 @@ def update_department(dept_id: int, dept: DepartmentUpdate):
         update_data['name'] = dept.name
     if dept.phone is not None:
         update_data['phone'] = dept.phone
-    if dept.building is not None:
-        update_data['building'] = dept.building
+    if dept.campus is not None:
+        update_data['campus'] = dept.campus
     if dept.is_active is not None:
         update_data['is_active'] = dept.is_active
     if update_data:
