@@ -1,24 +1,28 @@
-# Виртуальное окружение (не нужно в репозитории)
-venv/
-env/
-.venv/
-
-# Кэш и скомпилированные файлы Python
+# --- Python ---
 __pycache__/
-*.pyc
+*.py[cod]
 *.pyo
+*.pyd
+*.so
 
-# Файлы баз данных SQLite (все, с расширением .db и .sqlite)
+# --- Virtual environment ---
+venv/
+.env/
+
+# --- Database ---
 *.db
-*.sqlite
+*.sqlite3
 
-# Системные файлы macOS и Windows
-.DS_Store
-Thumbs.db
-
-# Папки настроек популярных IDE
+# --- IDE / Editor ---
 .vscode/
 .idea/
 
-# Логи
+# --- OS ---
+.DS_Store
+Thumbs.db
+
+# --- Logs ---
 *.log
+
+# --- Environment variables ---
+.env
