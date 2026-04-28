@@ -1,5 +1,5 @@
 from contextlib import asynccontextmanager
-from peewee import SqliteDatabase, Model, CharField, BooleanField
+from peewee import SqliteDatabase, Model, CharField
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 from typing import Optional, List
@@ -11,14 +11,13 @@ class Department(Model):
     name = CharField(max_length=100, unique=True, null=False, verbose_name="Название отделения")
     phone = CharField(max_length=20, null=False, default='', verbose_name="Телефон")
     campus = CharField(max_length=50, null=False, default='', verbose_name="Корпус")
-    is_active = BooleanField(null=False, default=True, verbose_name="Активно")
 
     class Meta:
         database = db
         table_name = 'departments'
 
 def init_db():
-    """Инициализация БД: создание таблиц"""
+    """Инициализация БД"""
     db.connect()
     db.create_tables([Department], safe=True)
     db.close()
@@ -27,20 +26,17 @@ class DepartmentCreate(BaseModel):
     name: str = Field(..., max_length=100, description="Название отделения")
     phone: Optional[str] = Field('', max_length=20, description="Телефон")
     campus: Optional[str] = Field('', max_length=50, description="Корпус")
-    is_active: bool = Field(True, description="Активно")
 
 class DepartmentUpdate(BaseModel):
     name: Optional[str] = Field(None, max_length=100, description="Название отделения")
     phone: Optional[str] = Field(None, max_length=20, description="Телефон")
     campus: Optional[str] = Field(None, max_length=50, description="Корпус")
-    is_active: Optional[bool] = Field(None, description="Активно")
 
 class DepartmentOut(BaseModel):
     id: int
     name: str
     phone: str
     campus: str
-    is_active: bool
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -69,8 +65,7 @@ def create_department(dept: DepartmentCreate):
     new_dept = Department.create(
         name=dept.name,
         phone=dept.phone or '',
-        campus=dept.campus or '',
-        is_active=dept.is_active
+        campus=dept.campus or ''
     )
     db.close()
     return new_dept
@@ -87,21 +82,13 @@ def get_department(dept_id: int):
         db.close()
 
 @app.get("/departments", response_model=List[DepartmentOut])
-def list_departments(
-    name: Optional[str] = None,
-    campus: Optional[str] = None,
-    is_active: Optional[bool] = None,
-    limit: int = 100,
-    offset: int = 0
-):
+def list_departments(name: Optional[str] = None, campus: Optional[str] = None, limit: int = 100, offset: int = 0):
     db.connect()
     query = Department.select()
     if name:
         query = query.where(Department.name.contains(name))
     if campus:
         query = query.where(Department.campus.contains(campus))
-    if is_active is not None:
-        query = query.where(Department.is_active == is_active)
     result = list(query.offset(offset).limit(limit))
     db.close()
     return result
@@ -122,8 +109,6 @@ def update_department(dept_id: int, dept: DepartmentUpdate):
         update_data['phone'] = dept.phone
     if dept.campus is not None:
         update_data['campus'] = dept.campus
-    if dept.is_active is not None:
-        update_data['is_active'] = dept.is_active
     if update_data:
         Department.update(update_data).where(Department.id == dept_id).execute()
     updated = Department.get_by_id(dept_id)
